@@ -42,6 +42,7 @@ public class TrackingActivity extends AppCompatActivity implements View.OnClickL
     private SimpleDateFormat dateFormat, timeFormat;
     private Chronometer chronometer;
     private BroadcastReceiver broadcastReceiver;
+    private boolean firstRun = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +57,7 @@ public class TrackingActivity extends AppCompatActivity implements View.OnClickL
 
         handler = new Handler();
 
-        stop.setClickable(false);
+        stop.setEnabled(false);
         start.setOnClickListener(this);
         stop.setOnClickListener(this);
 
@@ -69,9 +70,17 @@ public class TrackingActivity extends AppCompatActivity implements View.OnClickL
                 latitude = bundle.getDouble("Latitude");
                 longitude = bundle.getDouble("Longitude");
 
-
+                if(!firstRun){
+                    startPosition.setLatitude(tempLocation.getLatitude());
+                    startPosition.setLongitude(tempLocation.getLongitude());
+                }
                 tempLocation.setLatitude(latitude);
                 tempLocation.setLongitude(longitude);
+
+                if(startPosition != null){
+                    tempDistance += startPosition.distanceTo(tempLocation);
+                    distanceText.setText(String.format("%.2f",+tempDistance));
+                }
 
             }
         };
@@ -93,18 +102,22 @@ public class TrackingActivity extends AppCompatActivity implements View.OnClickL
                 chronometer.setBase(SystemClock.elapsedRealtime());
                 chronometer.start();
 
-                //start thread to get location
-                handler.postDelayed(runnable, 0);
 
                 //get start location
-                startPosition = new Location("startPosition");
-                startPosition.setLatitude(latitude);
-                startPosition.setLongitude(longitude);
+                if(firstRun){
+                    startPosition = new Location("startPosition");
+                    startPosition.setLatitude(latitude);
+                    startPosition.setLongitude(longitude);
+
+                    firstRun = false;
+                }
+
 
                 //get date
                 date = dateFormat.format(Calendar.getInstance().getTime());
 
-                stop.setClickable(true);
+                stop.setEnabled(true);
+                start.setEnabled(false);
                 break;
 
             case R.id.stop:
@@ -113,17 +126,13 @@ public class TrackingActivity extends AppCompatActivity implements View.OnClickL
 
                 start.setText("START");
 
-                //stop thread from getting location
-                handler.removeCallbacks(runnable);
-
                 //get finish position
                 endPosition = new Location("endPosition");
                 endPosition.setLatitude(latitude);
                 endPosition.setLongitude(longitude);
 
                 //calculate distance and display
-                distance = startPosition.distanceTo(endPosition);
-                distanceText.setText(String.format("%.2f",+distance));
+                distanceText.setText(String.format("%.2f",+tempDistance));
 
                 //display total time
                 totalTimeText.setText(chronometer.getText().toString());
@@ -143,7 +152,7 @@ public class TrackingActivity extends AppCompatActivity implements View.OnClickL
 
                                 //add to database
                                 DBHandler dbHandler = new DBHandler(TrackingActivity.this, null, null, 1);
-                                RunTrackerData data = new RunTrackerData(date,Double.toString(Math.round(distance)),
+                                RunTrackerData data = new RunTrackerData(date,Double.toString(Math.round(tempDistance)),
                                         totalTimeText.getText().toString());
                                 dbHandler.addData(data);
 
@@ -161,29 +170,18 @@ public class TrackingActivity extends AppCompatActivity implements View.OnClickL
                         .setIcon(android.R.drawable.ic_dialog_alert)
                         .show();
 
+                firstRun = true;
+                start.setEnabled(true);
                 break;
             default:
                 Log.i(TAG,"Error");
         }
     }
 
-    public Runnable runnable = new Runnable() {
-
-        public void run() {
-
-            if(tempLocation.getLatitude() != 0.0 || tempLocation.getLongitude() != 0.0){
-                tempDistance = startPosition.distanceTo(tempLocation);
-                distanceText.setText(String.format("%.2f",+tempDistance));
-            }
-            handler.postDelayed(this, 0);
-        }
-
-    };
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        handler.removeCallbacks(runnable);
     }
 
     @Override

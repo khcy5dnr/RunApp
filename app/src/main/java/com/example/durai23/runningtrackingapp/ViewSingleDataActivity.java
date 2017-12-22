@@ -40,8 +40,8 @@ public class ViewSingleDataActivity extends AppCompatActivity {
             builder = new AlertDialog.Builder(this);
         }
         // create alert box when delete is clicked
-        builder.setTitle("Delete Recipe?")
-                .setMessage("Are you sure you want to delete this recipe?")
+        builder.setTitle("Delete Entry?")
+                .setMessage("Are you sure you want to delete this entry?")
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.cancel();

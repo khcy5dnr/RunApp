@@ -30,9 +30,12 @@
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".ViewDataActivity" />
-        <activity android:name=".TrackingActivity" />
-        <activity android:name=".ViewSingleDataActivity"></activity>
+        <activity android:name=".ViewDataActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".TrackingActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".ViewSingleDataActivity"
+            android:screenOrientation="portrait"></activity>
     </application>
 
 </manifest>
